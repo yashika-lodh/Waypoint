@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "framer-motion": "^13.4.2",
+    "groq-sdk": "^1.6.0",
+    "uuid": "^14.0.2",
+    "zod": "^4.6.5",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0"
+  }
+}
