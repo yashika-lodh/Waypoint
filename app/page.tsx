@@ -1,6 +1,61 @@
+"use client";
+
+import { useAgentStore } from "@/store/useAgentStore";
+import { useEffect } from "react";
 import Image from "next/image";
 
 export default function Home() {
+
+const { plan, setPlan } = useAgentStore();
+
+  useEffect(() => {
+    setPlan({
+      id: "test-plan-1",
+      task: "Compare 5 project management tools",
+      createdAt: new Date().toISOString(),
+      steps: [
+        {
+          id: "step-1",
+          title: "Research Notion",
+          description: "Look up pricing, features, and reviews for Notion",
+          status: "pending",
+          editedByUser: false,
+        },
+        {
+          id: "step-2",
+          title: "Research Asana",
+          description: "Look up pricing, features, and reviews for Asana",
+          status: "pending",
+          editedByUser: false,
+        },
+        {
+          id: "step-3",
+          title: "Summarize findings",
+          description: "Compare all researched tools against criteria",
+          status: "pending",
+          editedByUser: false,
+        },
+      ],
+    });
+  }, [setPlan]);
+
+  return (
+    <main>
+      <h1>Waypoint — Wiring Test</h1>
+      {plan ? (
+        <ul>
+          {plan.steps.map((step) => (
+            <li key={step.id}>
+              {step.title} — <em>{step.status}</em>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No plan yet.</p>
+      )}
+    </main>
+  );
+
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
