@@ -11,8 +11,10 @@
   }
 
   export interface Plan {
+    id: string;
     task: string;
     steps: Step[];
+    createdAt: string;
   }
 
-  export type RunState = "idle" | "planning" | "reviewing" | "executing" | "paused" | "done";
+  export type RunState = "idle" | "planning" | "reviewing" | "executing" | "paused" | "done" | "error";
