@@ -10,6 +10,8 @@ interface AgentStore {
   setPlan: (plan: Plan) => void;
   updateStep: (stepId: string, updates: Partial<Step>) => void;
   deleteStep: (stepId: string) => void;
+  appendStepOutput: (stepId: string, chunk: string) => void;
+  setCurrentStepIndex: (index: number) => void;
   reset: () => void;
 }
 
@@ -42,5 +44,20 @@ export const useAgentStore = create<AgentStore>((set) => ({
         },
       };
     }),
+  appendStepOutput: (stepId, chunk) =>
+    set((state) => {
+      if (!state.plan) return state;
+      return {
+        plan: {
+          ...state.plan,
+          steps: state.plan.steps.map((s) =>
+            s.id === stepId
+              ? { ...s, output: (s.output ?? "") + chunk }
+              : s
+          ),
+        },
+      };
+    }),
+  setCurrentStepIndex: (index) => set({ currentStepIndex: index }),
   reset: () => set({ runState: "idle", plan: null, currentStepIndex: 0 }),
 }));
