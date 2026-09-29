@@ -1,122 +1,66 @@
 "use client";
 
+import { AnimatePresence } from "framer-motion";
 import { useAgentStore } from "@/store/useAgentStore";
-import { useState } from "react";
+import { runPlan } from "@/lib/runner";
+import { clearLastTask } from "@/lib/planClient";
+import { Button } from "./Button";
+import { StepCard } from "./StepCard";
 
 export function PlanEditor() {
-  const { plan, updateStep, deleteStep, setRunState } = useAgentStore();
-
+  const plan = useAgentStore((s) => s.plan);
+  const reset = useAgentStore((s) => s.reset);
   if (!plan) return null;
 
-  function handleApprove() {
-    setRunState("executing"); // Point 4 picks up from here
-  }
+  const steps = plan.steps;
+  const edits = steps.filter((s) => s.editedByUser).length;
 
   return (
-    <div className="w-full max-w-xl flex flex-col gap-3">
-      <h2 className="text-lg font-medium">Review the plan</h2>
+    <section>
+      <p className="text-sm text-[var(--wp-muted)]">Review the plan before it runs</p>
+      <h1 className="mt-1 text-balance text-2xl font-semibold leading-snug tracking-tight">
+        {plan.task}
+      </h1>
+      <p className="mt-2 text-sm text-[var(--wp-muted)]">
+        {steps.length} {steps.length === 1 ? "step" : "steps"}
+        {edits > 0 && `, ${edits} edited by you`}. Edit or remove anything, then run it.
+      </p>
 
-      {plan.steps.map((step) => (
-        <StepRow
-          key={step.id}
-          id={step.id}
-          title={step.title}
-          description={step.description}
-          onUpdate={(updates) => updateStep(step.id, { ...updates, editedByUser: true })}
-          onDelete={() => deleteStep(step.id)}
-        />
-      ))}
-
-      <button
-        onClick={handleApprove}
-        disabled={plan.steps.length === 0}
-        className="bg-black text-white rounded-md px-4 py-2 mt-2 disabled:opacity-50"
-      >
-        Approve Plan
-      </button>
-    </div>
-  );
-}
-
-function StepRow({
-  title,
-  description,
-  onUpdate,
-  onDelete,
-}: {
-  id: string;
-  title: string;
-  description: string;
-  onUpdate: (updates: { title?: string; description?: string }) => void;
-  onDelete: () => void;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [localTitle, setLocalTitle] = useState(title);
-  const [localDescription, setLocalDescription] = useState(description);
-
-  function handleSave() {
-    onUpdate({ title: localTitle, description: localDescription });
-    setIsEditing(false);
-  }
-
-  function handleCancel() {
-    setLocalTitle(title);
-    setLocalDescription(description);
-    setIsEditing(false);
-  }
-
-  return (
-    <div className="border rounded-md p-3">
-      {isEditing ? (
-        <div className="flex flex-col gap-2">
-          <input
-            value={localTitle}
-            onChange={(e) => setLocalTitle(e.target.value)}
-            className="border rounded px-2 py-1 font-medium"
-          />
-          <textarea
-            value={localDescription}
-            onChange={(e) => setLocalDescription(e.target.value)}
-            rows={2}
-            className="border rounded px-2 py-1 text-sm resize-none"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              className="text-sm bg-black text-white rounded px-3 py-1"
-            >
-              Save
-            </button>
-            <button
-              onClick={handleCancel}
-              className="text-sm border rounded px-3 py-1"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+      {steps.length > 0 ? (
+        <ol className="mt-8">
+          <AnimatePresence initial={false}>
+            {steps.map((step, i) => (
+              <StepCard
+                key={step.id}
+                step={step}
+                index={i}
+                isLast={i === steps.length - 1}
+                mode="review"
+                canIntervene
+                isRerunning={false}
+              />
+            ))}
+          </AnimatePresence>
+        </ol>
       ) : (
-        <div className="flex justify-between items-start gap-3">
-          <div>
-            <strong>{title}</strong>
-            <p className="text-sm text-gray-500">{description}</p>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <button
-              onClick={() => setIsEditing(true)}
-              className="text-sm text-gray-500 hover:text-black"
-            >
-              Edit
-            </button>
-            <button
-              onClick={onDelete}
-              className="text-sm text-red-500 hover:text-red-700"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
+        <p className="mt-8 rounded-lg border border-dashed border-[var(--wp-line)] px-4 py-6 text-center text-sm text-[var(--wp-muted)]">
+          Every step has been removed. Start over to draft a new plan.
+        </p>
       )}
-    </div>
+
+      <div className="mt-8 flex flex-wrap gap-2 border-t border-[var(--wp-line)] pt-5">
+        <Button variant="primary" onClick={() => runPlan()} disabled={steps.length === 0}>
+          Run plan
+        </Button>
+        <Button
+          onClick={() => {
+            clearLastTask();
+            reset();
+          }}
+        >
+          Start over
+        </Button>
+      </div>
+    </section>
   );
 }

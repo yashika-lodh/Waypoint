@@ -1,74 +1,76 @@
 "use client";
 
-import { useState } from "react";
-import { useAgentStore } from "@/store/useAgentStore";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { getLastTask, requestPlan } from "@/lib/planClient";
+import { Button } from "./Button";
+
+const MAX_LENGTH = 2000;
+const EXAMPLE_TASK =
+  "Compare Notion, Linear, Asana, ClickUp, and Monday.com for a 10-person startup on pricing, integrations, and AI features.";
 
 export function TaskInput() {
-  const [task, setTask] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { setPlan, setRunState } = useAgentStore();
+  const [task, setTask] = useState(getLastTask);
+  const trimmed = task.trim();
+  const tooLong = task.length > MAX_LENGTH;
+  const canSubmit = trimmed.length > 0 && !tooLong;
 
-  async function handleSubmit() {
-    if (!task.trim()) return;
+  function submit(e?: FormEvent) {
+    e?.preventDefault();
+    if (canSubmit) requestPlan(trimmed);
+  }
 
-    setIsSubmitting(true);
-    setRunState("planning");
-
-    try {
-      const res = await fetch("/api/plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ task }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        setRunState("error");
-        console.error(data.error ?? "Unknown error generating plan");
-        return;
-      }
-
-      // data.plan matches your PlanResponseSchema shape: { steps: [...] }
-      setPlan({
-        id: crypto.randomUUID(),
-        task,
-        createdAt: new Date().toISOString(),
-        steps: data.plan.steps.map((s: { title: string; description: string }) => ({
-          id: crypto.randomUUID(),
-          title: s.title,
-          description: s.description,
-          status: "pending" as const,
-          editedByUser: false,
-        })),
-      });
-
-      setRunState("reviewing");
-    } catch (err) {
-      setRunState("error");
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
+  function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
   }
 
   return (
-    <div className="flex flex-col gap-3 w-full max-w-xl">
+    <form onSubmit={submit}>
+      <h1 className="text-balance text-[2rem] font-semibold leading-tight tracking-tight sm:text-[2.5rem]">
+        What should the agent work on?
+      </h1>
+      <p className="mt-3 max-w-[56ch] text-[var(--wp-muted)]">
+        Describe the task. Waypoint drafts a step-by-step plan you can edit before anything runs,
+        and you can pause or redirect any step while it works.
+      </p>
+
+      <label htmlFor="task" className="sr-only">
+        Task
+      </label>
       <textarea
+        id="task"
+        rows={5}
         value={task}
         onChange={(e) => setTask(e.target.value)}
-        placeholder="e.g. Compare 5 project management tools against pricing, features, and integrations"
-        rows={3}
-        className="border rounded-md p-3 resize-none"
-        disabled={isSubmitting}
+        onKeyDown={onKeyDown}
+        placeholder="Research and compare five vendors against the criteria that matter to you…"
+        aria-invalid={tooLong}
+        aria-describedby="task-hint"
+        className="mt-8 w-full resize-y rounded-lg border border-[var(--wp-line)] bg-[var(--wp-surface)] px-4 py-3 leading-relaxed text-[var(--wp-ink)] outline-none placeholder:text-[var(--wp-muted)] focus:border-[var(--wp-route)] focus:ring-2 focus:ring-[var(--wp-route-soft)]"
       />
-      <button
-        onClick={handleSubmit}
-        disabled={isSubmitting || !task.trim()}
-        className="bg-black text-white rounded-md px-4 py-2 disabled:opacity-50"
-      >
-        {isSubmitting ? "Planning..." : "Generate Plan"}
-      </button>
-    </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <p
+          id="task-hint"
+          className={`text-sm ${tooLong ? "text-[var(--wp-danger)]" : "text-[var(--wp-muted)]"}`}
+        >
+          {tooLong
+            ? `Shorten the task to ${MAX_LENGTH.toLocaleString()} characters or fewer.`
+            : trimmed
+              ? "Press ⌘ Enter to draft the plan."
+              : (
+                <button
+                  type="button"
+                  onClick={() => setTask(EXAMPLE_TASK)}
+                  className="underline decoration-[var(--wp-line)] underline-offset-4 hover:text-[var(--wp-ink)]"
+                >
+                  Try an example task
+                </button>
+              )}
+        </p>
+        <Button type="submit" variant="primary" disabled={!canSubmit}>
+          Draft plan
+        </Button>
+      </div>
+    </form>
   );
 }
