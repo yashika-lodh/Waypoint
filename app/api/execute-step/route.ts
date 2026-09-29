@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { groq } from "@/lib/groq";
 import { Step } from "@/types/agent";
 
-export const runtime = "nodejs"; // Groq SDK needs Node, not Edge
+export const runtime = "nodejs";
 
 interface ExecuteStepRequest {
   step: Step;
@@ -22,9 +22,11 @@ function buildMessages(body: ExecuteStepRequest) {
       role: "system" as const,
       content:
         "You are an execution agent completing ONE step of a multi-step research task. " +
-        "Write a focused, concrete answer for only this step — cite specific facts, numbers, " +
-        "or comparisons where relevant. Do not restate the overall task or summarize other steps. " +
-        "Keep it to a few paragraphs or a short list; this is one step among several.",
+        "You have a browser_search tool — use it to look up current, real facts (pricing, " +
+        "features, dates) rather than relying on training knowledge, which may be stale or " +
+        "wrong for fast-changing products. Write a focused, concrete answer for only this " +
+        "step. Do not restate the overall task or summarize other steps. Keep it to a few " +
+        "paragraphs or a short list; this is one step among several.",
     },
     {
       role: "user" as const,
@@ -59,8 +61,11 @@ export async function POST(request: NextRequest) {
         messages,
         stream: true,
         temperature: 0.4,
+        reasoning_effort: "low",
+        tool_choice: "required",
+        tools: [{ type: "browser_search" }],
       },
-      { signal: request.signal } // ties client abort -> Groq connection
+      { signal: request.signal }
     );
   } catch (err) {
     if (request.signal.aborted) {
