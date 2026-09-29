@@ -1,1 +1,137 @@
 @import "tailwindcss";
+
+:root {
+  --wp-paper: #edf1ef;
+  --wp-surface: #f9fbfa;
+  --wp-ink: #16202a;
+  --wp-muted: #5a6670;
+  --wp-line: #c9d2cf;
+  --wp-route: #0d6b65;
+  --wp-route-soft: #d6eae7;
+  --wp-annot: #8f5400;
+  --wp-annot-soft: #fbebcb;
+  --wp-danger: #b3261e;
+  --wp-danger-soft: #fbe3e0;
+  --wp-on-accent: #ffffff;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wp-paper: #10171b;
+    --wp-surface: #172127;
+    --wp-ink: #e4ebe8;
+    --wp-muted: #97a5ab;
+    --wp-line: #2b3940;
+    --wp-route: #56bdb4;
+    --wp-route-soft: #16332f;
+    --wp-annot: #e7ae54;
+    --wp-annot-soft: #3a2b10;
+    --wp-danger: #f08a80;
+    --wp-danger-soft: #3d1a17;
+    --wp-on-accent: #06201d;
+  }
+}
+
+body {
+  background: var(--wp-paper);
+  color: var(--wp-ink);
+  font-family: var(--font-ui), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Streamed agent output (TraceLine) ---- */
+.wp-output {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.wp-output > * + * { margin-top: 0.75em; }
+.wp-output h1, .wp-output h2, .wp-output h3, .wp-output h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.25em;
+}
+.wp-output > :first-child { margin-top: 0; }
+.wp-output strong { font-weight: 600; }
+.wp-output em { color: var(--wp-muted); }
+.wp-output ul { list-style: disc; padding-left: 1.25rem; }
+.wp-output ol { list-style: decimal; padding-left: 1.25rem; }
+.wp-output li + li { margin-top: 0.25em; }
+.wp-output a { color: var(--wp-route); text-decoration: underline; text-underline-offset: 2px; }
+.wp-output code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--wp-paper);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+.wp-output pre { overflow-x: auto; background: var(--wp-paper); padding: 0.75rem; border-radius: 6px; }
+.wp-output pre code { background: none; padding: 0; }
+
+.wp-table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--wp-line);
+  border-radius: 6px;
+}
+.wp-output table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.wp-output th, .wp-output td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--wp-line);
+  overflow-wrap: normal;
+  min-width: 7rem;
+}
+.wp-output th { font-weight: 600; background: var(--wp-paper); white-space: nowrap; }
+.wp-output tr:last-child td { border-bottom: 0; }
+
+.wp-cite {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  margin-left: 0.2rem;
+  border-radius: 999px;
+  background: var(--wp-route-soft);
+  color: var(--wp-route);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  vertical-align: 0.15em;
+  line-height: 1;
+}
+
+.wp-waiting { font-size: 0.875rem; color: var(--wp-muted); }
+
+/* ---- Motion ---- */
+.wp-caret {
+  display: inline-block;
+  width: 0.45rem;
+  height: 1rem;
+  margin-left: 0.15rem;
+  background: var(--wp-route);
+  vertical-align: -0.15rem;
+  animation: wp-blink 1s steps(2) infinite;
+}
+.wp-pulse { animation: wp-pulse 1.6s ease-out infinite; }
+.wp-skeleton {
+  background: linear-gradient(90deg, var(--wp-line) 0%, var(--wp-surface) 50%, var(--wp-line) 100%);
+  background-size: 200% 100%;
+  animation: wp-shimmer 1.4s linear infinite;
+}
+
+@keyframes wp-blink { 50% { opacity: 0; } }
+@keyframes wp-pulse {
+  from { transform: scale(1); opacity: 0.45; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+@keyframes wp-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-caret, .wp-pulse, .wp-skeleton { animation: none; }
+  .wp-pulse { display: none; }
+}
