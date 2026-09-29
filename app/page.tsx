@@ -1,26 +1,78 @@
 "use client";
 
-import { TaskInput } from "@/components/TaskInput";
-import { PlanEditor } from "@/components/PlanEditor";
 import { useAgentStore } from "@/store/useAgentStore";
+import { runPlan, pauseCurrentStep, resumeRun } from "@/lib/runner";
+import { Plan } from "@/types/agent";
+
+const dummyPlan: Plan = {
+  id: "test-plan-1",
+  task: "research and compare 3 project management tools on pricing and features",
+  createdAt: new Date().toISOString(),
+  steps: [
+    {
+      id: "step-1",
+      title: "Research Notion pricing",
+      description: "Find Notion's current pricing tiers and what each includes",
+      status: "pending",
+      editedByUser: false,
+    },
+    {
+      id: "step-2",
+      title: "Research Linear pricing",
+      description: "Find Linear's current pricing tiers and what each includes",
+      status: "pending",
+      editedByUser: false,
+    },
+    {
+      id: "step-3",
+      title: "Research Asana pricing",
+      description: "Find Asana's current pricing tiers and what each includes",
+      status: "pending",
+      editedByUser: false,
+    },
+  ],
+};
 
 export default function Home() {
-  const { plan, runState } = useAgentStore();
+  const { plan, setPlan, runState, currentStepIndex } = useAgentStore();
 
   return (
-    <main className="flex flex-col items-center gap-6 p-12">
-      <h1 className="text-2xl font-semibold">Waypoint</h1>
+    <main style={{ padding: 24, fontFamily: "monospace" }}>
+      <h1>Point 4 — Execution Engine Test</h1>
 
-      {runState === "idle" || runState === "planning" ? <TaskInput /> : null}
+      <div style={{ marginBottom: 16 }}>
+        <button onClick={() => setPlan(dummyPlan)} disabled={!!plan}>
+          Load dummy plan
+        </button>{" "}
+        <button onClick={() => runPlan()} disabled={!plan || runState === "executing"}>
+          Run
+        </button>{" "}
+        <button onClick={() => pauseCurrentStep()} disabled={runState !== "executing"}>
+          Pause
+        </button>{" "}
+        <button onClick={() => resumeRun()} disabled={runState !== "paused"}>
+          Resume
+        </button>
+      </div>
 
-      {runState === "planning" && <p>Generating your plan...</p>}
-      {runState === "error" && (
-        <p className="text-red-500">Something went wrong. Try again.</p>
-      )}
+      <p>
+        runState: {runState} | currentStepIndex: {currentStepIndex}
+      </p>
 
-      {runState === "reviewing" && plan && <PlanEditor />}
-
-      {runState === "executing" && <p>Executing plan... (Point 4 builds this)</p>}
+      {plan?.steps.map((step, i) => (
+        <div
+          key={step.id}
+          style={{
+            border: "1px solid #ccc",
+            padding: 8,
+            marginBottom: 8,
+            background: i === currentStepIndex ? "#f5f5f5" : "white",
+          }}
+        >
+          <strong>{step.title}</strong> — <em>{step.status}</em>
+          <p style={{ whiteSpace: "pre-wrap" }}>{step.output}</p>
+        </div>
+      ))}
     </main>
   );
 }
