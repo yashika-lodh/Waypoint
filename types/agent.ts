@@ -8,6 +8,7 @@
     output?: string;
     editedByUser: boolean;
     needsReview?: boolean;
+    stale?: boolean;
   }
 
   export interface Plan {
